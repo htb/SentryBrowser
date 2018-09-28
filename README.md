@@ -6,7 +6,7 @@ This is simple script for browsing some information from a Sentyry server.
 
 ## Installation
 
-pip install sentry_browser
+    pip install sentry_browser
 
 ## Usage
 
@@ -54,7 +54,7 @@ Documentation and installation instructions for sentry-cli:
 https://github.com/getsentry/sentry-cli 
 
 
-## `sentry logs <entryID`
+## `sentry log <entryID`
 
 This lists logs collected as 'breadcrumbs' in Sentry.
 The format of these logs are particular to one of my projects.

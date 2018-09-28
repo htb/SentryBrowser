@@ -6,42 +6,26 @@
 python -m pip install --user --upgrade setuptools wheel twine
 
 
-# BUILD the distribution to the dist/ directory:
-
-python setup.py sdist bdist_wheel
-
-# See what is packaged with:
-
-cat dist/*.gz | gunzip | tar t
-
-# UPLOAD (to Test PyPI):
-
-twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-
-# VERIFY upload here:
-
-https://test.pypi.org/project/sentry_browser
-
-# INSTALL package with pip:
-
-python -m pip install --index-url https://test.pypi.org/simple/ sentry_browser
-
 # =============================================
 # Build distribution package to dist/ directory
 # =============================================
 
 python setup.py sdist #bdist_wheel
 
+# See what is packaged with:
 
-# =====================
-# With ~/.pypirc set up
-# =====================
+cat dist/*.gz | gunzip | tar t
 
-# (Replace 'pypi' below with 'pypitest' for test.)
+
+# =======================
+# Upload ~/.pypirc set up
+# =======================
+
+# (Replace 'pypi' below with 'testpypi' for test.)
 
 # Upload:
 
-twine upload -3 pypi dist/sentry_browser-0.0.1.tar.gz
+twine upload --repository pypi dist/sentry_browser-0.0.1.tar.gz
 
 # Verify
 
@@ -60,3 +44,7 @@ pip install -e .
 # =================
 
 pip install sentry_browser
+
+# To install from testpypi
+
+pip install --index-url https://test.pypi.org/simple/ sentry_browser

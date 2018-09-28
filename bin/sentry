@@ -17,7 +17,7 @@ def usage(err=None, rich=False):
   print "  %s issue <issueID>"                  % p
   print "  %s events <issueID>"                 % p
   print "  %s event <eventID>"                  % p
-  print "  %s logs [-l loglevel] <eventID>"     % p
+  print "  %s log [-l loglevel] <eventID>"      % p
 
   if rich:
     print

@@ -2,7 +2,6 @@ import setuptools
 
 
 requires = [
-
 ]
 
 setuptools.setup(
@@ -11,7 +10,7 @@ setuptools.setup(
   author       = 'Hans Terje Bakke',
   author_email = 'hans.terje.bakke@gmail.com',
   description  = 'For simple browsing of issues, events and special breadcrumbs from sentry.io.',
-  url          = "TODO::GITHUB",
+  url          = 'https://github.com/htb/SentryBrowser',
   classifiers  = [
     'Programming Language :: Python :: 2.7',
     'Operating System :: OS Independent'
