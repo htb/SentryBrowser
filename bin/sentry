@@ -1,204 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sentrybrowser
 
-
-# ===== UTILITY FUNCTIONS
-
-def _levelNumber(text):
-  levels = ["trace", "debug", "verbose", "info", "status", "warning", "error", "critical", "code"]
-  try:
-    return levels.index(text.lower())
-  except:
-    return -1
-
-def compareLevelStrings(a, b):
-  aVal = _levelNumber(a)
-  bVal = _levelNumber(b)
-  if aVal == bVal: return 0
-  if aVal < bVal: return -1
-  return 1
-
-
-# ===== CLASSES
-
-import requests
-
-
-class Issue(object):
-
-  def __init__(self, json):
-    self.json          = json
-    self.id            = json.get('id')
-    self.title         = json.get('title')
-    self.level         = json.get('level')
-    self.firstSeen     = toDate(json.get('firstSeen'))
-    self.link          = json.get('permaLink')
-
-
-class Event(object):
-
-  def __init__(self, json):
-    self.json          = json
-    self.id            = json.get('eventID')
-    self.message       = json.get('message')
-    self.date          = toDate(json.get('dateCreated'))
-    self.device_model  = None
-    self.os_name       = None
-    self.os_version    = None
-    self.app_bundleID  = None
-    self.app_version   = None
-    self.app_build     = None
-
-    contexts_json = json.get('contexts')
-    if contexts_json:
-      device_json = contexts_json.get('device')
-      if device_json:
-        self.device_model = device_json.get('model')
-      os_json = contexts_json.get('os')
-      if os_json:
-        self.os_name = os_json.get('name')
-        self.os_version = os_json.get('version')
-      app_json = contexts_json.get('app')
-      if app_json:
-        self.app_bundleID = app_json.get('app_identifier')
-        self.app_version = app_json.get('app_version')
-        self.app_build = app_json.get('app_build')
-
-    # Logs
-    self.log_entries = []
-    for entry_json in json.get('entries'):
-      if entry_json.get('type') == 'breadcrumbs':
-        breadcrumbs_json = (entry_json.get('data') or {}).get('values') or {}
-        for breadcrumb_json in breadcrumbs_json:
-          if breadcrumb_json.get('category') == "LOG":
-            log_entry = LogEntry(breadcrumb_json)
-            if log_entry: self.log_entries.append(log_entry)
-
-
-class LogEntry(object):
-
-  # TODO: Get a levelNumber as well or sortable/filterable by level text
-
-  def __init__(self, json):
-    self.json = json
-    self.category  = json.get('category')
-    self.date      = toDate(json.get('timestamp'))
-    self.message   = json.get('message')
-    self.logger    = None
-    self.level     = None
-    self.file      = None
-    self.function  = None
-    self.line      = None
-    self.column    = None
-    self.error     = None
-
-    data_json = json.get('data')
-    if data_json:
-      self.logger   = data_json.get('logger')
-      self.level    = data_json.get('level')
-      self.file     = data_json.get('file')
-      self.function = data_json.get('function')
-      self.line     = data_json.get('line')
-      self.column   = data_json.get('column')
-      self.error    = data_json.get('error')
-
-
-class Sentry(object):
-
-  url_api           = 'https://sentry.io/api/0'
-  url_format_issues = '%s/projects/%s/%s/issues/'
-  url_format_events = '%s/issues/%s/events/'
-  url_format_event  = '%s/projects/%s/%s/events/%s/'
-
-  def __init__(self, organization, project, auth_token):
-    self.organization = organization
-    self.project = project
-    self._auth_token =  auth_token
-    self._headers ={
-      'user-agent'    : 'python',
-      'Authorization' : 'Bearer %s' % self._auth_token
-    }
-
-  def _get_issues_json(self):
-    url = Sentry.url_format_issues % (Sentry.url_api, self.organization, self.project)
-    r = requests.get(url, headers=self._headers)
-    return r.json()
-
-
-  def _get_event_json(self, eventID):
-    url = Sentry.url_format_event % (Sentry.url_api, self.organization, self.project, eventID)
-    r = requests.get(url, headers=self._headers)
-    return r.json()
-
-
-  def _get_events_json(self, issueID):
-    url = Sentry.url_format_events % (Sentry.url_api, issueID)
-    r = requests.get(url, headers=self._headers)
-    return r.json()
-
-  def get_issues(self):
-    issues = []
-    jj = self._get_issues_json()
-    for j in jj or []:
-      issue = Issue(j)
-      if issue: issues.append(issue)
-    return issues
-
-  def get_events(self, issueID):
-    events = []
-    jj = self._get_events_json(issueID)
-    for j in jj or []:
-      event = Event(j)
-      if event: events.append(event)
-    return events
-
-  def get_event(self, eventID):
-    jj = self._get_event_json(eventID)
-    return Event(jj) if jj else None
-
-
-# ===== PRINTING
-
-def print_info(sentry):
-  print "Organization : %s" % (sentry.organization or "(not set)")
-  print "Project      : %s" % (sentry.project      or "(not set)")
-  print "Auth token   : %s" % (sentry._auth_token  or "(not set)")
-  print "Log level    : %s" % (sentry.loglevel     or "(not set)")
-
-def print_issues(issues):
-  for issue in issues:
-    print "[%10s] %s" % (issue.id, issue.title)
-
-
-def print_events(events):
-  for event in events:
-    print "[%32s] %s" % (event.id, event.message)
-
-
-def print_event_info(event):
-  print "ID       : %s" % event.id
-  print "Date     : %s" % prettyDate(event.date)
-  print "Message  : %s" % event.message
-  print "device   : %s" % event.device_model
-  print "os       : %s %s" % (event.os_name, event.os_version)
-  print "BundleID : %s" % event.app_bundleID
-  print "Version  : %s (%s)" % (event.app_version, event.app_build)
-
-
-def print_event_log(event, level = None):
-  log_format = "%-19s | %-15s | %-11s | %s"
-  error_format = "%-19s | Error: %s"
-  for entry in event.log_entries:
-    if not level or compareLevelStrings(entry.level, level) >= 0:
-      print log_format % (prettyDate(entry.date), entry.logger, entry.level, entry.message)
-      if entry.error:
-        print error_format % ("", entry.error)
-
-
-# ===== MAIN
-
+from sentrybrowser.Sentry import Sentry
 import getopt, sys, os, ConfigParser
 
 
@@ -210,6 +14,7 @@ def usage(err=None, rich=False):
   print "  %s help"                             % p
   print "  %s info"                             % p
   print "  %s issues"                           % p
+  print "  %s issue <issueID>"                  % p
   print "  %s events <issueID>"                 % p
   print "  %s event <eventID>"                  % p
   print "  %s logs [-l loglevel] <eventID>"     % p
@@ -297,12 +102,27 @@ def main():
 
   if cmd == 'info':
 
-    print_info(sentry)
+    sentry.print_info()
 
   elif cmd == 'issues':
 
     issues = sentry.get_issues()
-    print_issues(issues)
+    for issue in issues:
+      issue.print_line()
+
+  elif cmd == 'issue':
+
+    if len(args) < 1: usage('missing argument <issueID>')
+    issueID = args[0]
+
+    issues = sentry.get_issues()
+    found = False
+    for issue in issues:
+      if issue.id == issueID:
+        issue.print_info()
+        found = True
+    if not found:
+      print "Issue '%s' not found." % issueID
 
   elif cmd == 'events':
 
@@ -310,7 +130,8 @@ def main():
     issueID = args[0]
 
     events = sentry.get_events(issueID)
-    print_events(events)
+    for event in events:
+      event.print_line()
 
   elif cmd == 'event':
 
@@ -318,7 +139,11 @@ def main():
     eventID = args[0]
 
     event = sentry.get_event(eventID)
-    print_event_info(event)
+    if event:
+      event.print_info()
+    else:
+      print "Event '%s' not found." % eventID
+
 
   elif cmd == 'log' or cmd == 'logs':
 
@@ -326,7 +151,10 @@ def main():
     eventID = args[0]
 
     event = sentry.get_event(eventID)
-    print_event_log(event, sentry.loglevel)
+    if event:
+      event.print_log(loglevel)
+    else:
+      print "Event '%s' not found." % eventID
 
   else:
 

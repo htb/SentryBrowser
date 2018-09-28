@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 
+
 name = 'sentrybrowser'
 
-__all__ = ['toDate', 'prettyDate']
 
-import datetime, dateutil.parser
+from .dateutils import toDate, prettyDate
 
-
-def toDate(text):
-  if not text: return None
-  try:
-    return dateutil.parser.parse(text)
-  except:
-    return None
+__all__ = [
+  'toDate', 'prettyDate'
+ ]
 
 
-def prettyDate(date):
-  if not type(date) is datetime.datetime: return None
-  try:
-    return date.strftime('%Y-%m-%d %H:%M:%S')
-  except:
-    return None
+#region Encoding of stdin/stdout
+
+import sys, codecs
+
+# Fix stdin and stdout encoding issues
+_encoding_stdin  = sys.stdin.encoding or "UTF-8"
+_encoding_stdout = sys.stdout.encoding or _encoding_stdin
+#sys.stdin = codecs.getreader(_encoding_stdin)(sys.stdin)
+sys.stdout = codecs.getwriter(_encoding_stdout)(sys.stdout)
+
+#endregion Encoding of stdin/stdout

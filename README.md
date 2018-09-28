@@ -1,5 +1,9 @@
 # Sentry browser
 
+This is simple script for browsing some information from a Sentyry server.
+
+(See http://sentry.io for information about Sentry.)
+
 ## Installation
 
 pip install sentry_browser
@@ -48,3 +52,22 @@ an authorization token. To get an auth token, call
 Documentation and installation instructions for sentry-cli:
 
 https://github.com/getsentry/sentry-cli 
+
+
+## `sentry logs <entryID`
+
+This lists logs collected as 'breadcrumbs' in Sentry.
+The format of these logs are particular to one of my projects.
+You can use the same for your project if you submit special breadcrumbs
+with category `LOG` and the following special information in addition
+to the standard fields:
+
+    "category": "LOG",
+    "data": {
+        "logger"   : "myLoggerName",
+        "level"    : "myLoglevel",
+        "file"     : "myOptionalFilename",
+        "function" : "myOptionalFunction()",
+        "line"     : "myOptionalLineNumber",
+        "column"   : "myOptionalColumnNumber"
+    }
