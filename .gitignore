@@ -1,4 +1,7 @@
+# Project specific stuff...
 .idea
+bin/sentrybrowser
+
 
 
 # Byte-compiled / optimized / DLL files

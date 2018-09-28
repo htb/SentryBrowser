@@ -1,26 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sentrybrowser
+
 
 # ===== UTILITY FUNCTIONS
-
-import datetime, dateutil.parser
-
-
-def toDate(text):
-  if not text: return None
-  try:
-    return dateutil.parser.parse(text)
-  except:
-    return None
-
-
-def prettyDate(date):
-  if not type(date) is datetime.datetime: return None
-  try:
-    return date.strftime('%Y-%m-%d %H:%M:%S')
-  except:
-    return None
 
 def _levelNumber(text):
   levels = ["trace", "debug", "verbose", "info", "status", "warning", "error", "critical", "code"]
@@ -178,9 +162,10 @@ class Sentry(object):
 # ===== PRINTING
 
 def print_info(sentry):
-  print "Organization : %s" % sentry.organization
-  print "Project      : %s" % sentry.project
-  print "Auth token   : %s" % sentry._auth_token
+  print "Organization : %s" % (sentry.organization or "(not set)")
+  print "Project      : %s" % (sentry.project      or "(not set)")
+  print "Auth token   : %s" % (sentry._auth_token  or "(not set)")
+  print "Log level    : %s" % (sentry.loglevel     or "(not set)")
 
 def print_issues(issues):
   for issue in issues:
@@ -214,7 +199,7 @@ def print_event_log(event, level = None):
 
 # ===== MAIN
 
-import getopt, sys, os
+import getopt, sys, os, ConfigParser
 
 
 def usage(err=None, rich=False):
@@ -246,18 +231,29 @@ def usage(err=None, rich=False):
     exit(0)
 
 
+def get_config_value(config, path):
+  try:
+    (section, field) = path.split('.', 1)
+    return config.get(section, field)
+  except:
+    return None
+
+
 def main():
 
-  organization = 'posten-norge-as'
-  project      = 'sporing-ios'
-  auth_token   = 'e687970fa9ba43669ea24f2822edfe2572447d2e6dce4c458fb2b0d214aab0ac'
+  organization = None
+  project      = None
+  auth_token   = None
   loglevel     = None
 
-  # TODO: Ready organization, project, auth_token from defaults:
-  # ~.sentryclirc
-  # SENTRY_PROJECT (defaults.project)
-  # SENTRY_ORG(defaults.org)
-  # SENTRY_AUTH_TOKEN (auth.token)
+  # Default to entries from config file for sentry-cli or environment variable.
+  # Environment variable has presedence over config file.
+  config = ConfigParser.ConfigParser()
+  config.read(os.path.expanduser("~/.sentryclirc"))
+  loglevel     = os.getenv('SENTRY_LOG_LEVEL')  or get_config_value(config, 'log.level')        or loglevel
+  organization = os.getenv('SENTRY_ORG')        or get_config_value(config, 'defaults.org')     or organization
+  project      = os.getenv('SENTRY_PROJECT')    or get_config_value(config, 'defaults.project') or  project
+  auth_token   = os.getenv('SENTRY_AUTH_TOKEN') or get_config_value(config, 'auth.token')       or auth_token
 
   if len(sys.argv) == 1: usage()
   try:
@@ -292,9 +288,12 @@ def main():
 
 
   # TODO: Fail if missing critical option
-
+  if not organization : print 'Organization not specified.'; exit(-1)
+  if not project      : print 'Project not specified.'; exit(-1)
+  if not auth_token   : print 'Auth token not specified.'; exit(-1)
 
   sentry = Sentry(organization, project, auth_token)
+  sentry.loglevel = loglevel
 
   if cmd == 'info':
 
@@ -327,7 +326,7 @@ def main():
     eventID = args[0]
 
     event = sentry.get_event(eventID)
-    print_event_log(event, loglevel)
+    print_event_log(event, sentry.loglevel)
 
   else:
 
@@ -335,13 +334,3 @@ def main():
 
 
 if __name__ == '__main__': main()
-
-
-# Something to test with..
-# issueID: '700384307'
-# eventID: '6D7CB839A37940AB8A3732CA9D60CEB0'
-
-# TODO:
-# 1) Read auth token from .file or cmdline
-# 2) pip intall
-# 3) git checkin
