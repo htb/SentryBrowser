@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
+import sentrybrowser
 from sentrybrowser.Sentry import Sentry
 import getopt, sys, os, ConfigParser
 
@@ -36,6 +37,14 @@ def usage(err=None, rich=False):
     exit(0)
 
 
+def show_version():
+  p = os.path.basename(sys.argv[0])
+  version = sentrybrowser.__version__
+  author = sentrybrowser.__author__
+  print "%s version %s by %s" % (p, version, author)
+  exit(0)
+
+
 def get_config_value(config, path):
   try:
     (section, field) = path.split('.', 1)
@@ -67,6 +76,7 @@ def main():
       ':i:l:o:p:a:t:h',
       [
         "help",
+        "version",
         "loglevel=", "level=",
         "organization=", "org=",
         "project=", "proj=",
@@ -79,6 +89,7 @@ def main():
   for (o, a) in optlist:
     # Common options
     if   o in ('-h', '--help')                   : usage(rich=True)
+    elif o in ('--version')                      : show_version()
     elif o in ('-l', '--loglevel', '--level')    : loglevel = a
     elif o in ('-o', '--organization', '--org')  : organization = a
     elif o in ('-p', '--project', '--proj')      : project = a

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-name = 'sentrybrowser'
-
+__version__ = "0.0.2"
+__author__  = "Hans Terje Bakke"
 
 from .dateutils import toDate, prettyDate
 

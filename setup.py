@@ -1,12 +1,13 @@
 import setuptools
 
+from sentrybrowser import __version__ as version
 
 requires = [
 ]
 
 setuptools.setup(
   name         = 'sentry_browser',
-  version      = '0.0.1',
+  version      = version,
   author       = 'Hans Terje Bakke',
   author_email = 'hans.terje.bakke@gmail.com',
   description  = 'For simple browsing of issues, events and special breadcrumbs from sentry.io.',
