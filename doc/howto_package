@@ -23,13 +23,13 @@ cat dist/*.gz | gunzip | tar t
 
 # (Replace 'pypi' below with 'testpypi' for test.)
 
-# Upload:
+# Upload (NB: change version number here):
 
 twine upload --repository pypi dist/sentry_browser-0.0.1.tar.gz
 
 # Verify
 
-https://test.pypi.org/project/sentry_browser/
+https://pypi.org/project/sentry_browser/
 
 
 # =================================
