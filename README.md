@@ -20,7 +20,7 @@ Organization, Project and Auth Token must be specified as input to the script.
 It is also possible to set these as environment variables or configure them in the
 file `~/.sentryclirc` that is used by `sentry-cli` (another program).
 
-A special not on the log level is that the levels we use for breadcrumb log listing
+A special note on the log level is that the levels we use for breadcrumb log listing
 does not necessarily conform to sentry log level names. We just use this as default.
 
 ### Config file (~/.sentryclirc)

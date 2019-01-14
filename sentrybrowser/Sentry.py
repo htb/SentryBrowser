@@ -2,7 +2,7 @@
 
 from .Issue import Issue
 from .Event import Event
-import requests
+import requests, sys
 
 
 class Sentry(object):
@@ -21,19 +21,32 @@ class Sentry(object):
       'Authorization' : 'Bearer %s' % self._auth_token
     }
 
+  def _check_fatal_error(self, r):
+    if r.status_code != 200:
+      j = r.json()
+      if j:
+        d = j.get('detail') or '(missing details)'
+        sys.stderr.write('ERROR code %d: %s\n' % (r.status_code, d))
+      else:
+        sys.stderr.write('ERROR code %d\n' % r.status_code)
+      sys.exit(1)  # Error
+
   def _get_issues_json(self):
     url = Sentry.url_format_issues % (Sentry.url_api, self.organization, self.project)
     r = requests.get(url, headers=self._headers)
+    self._check_fatal_error(r)
     return r.json()
 
   def _get_event_json(self, eventID):
     url = Sentry.url_format_event % (Sentry.url_api, self.organization, self.project, eventID)
     r = requests.get(url, headers=self._headers)
+    self._check_fatal_error(r)
     return r.json()
 
   def _get_events_json(self, issueID):
     url = Sentry.url_format_events % (Sentry.url_api, issueID)
     r = requests.get(url, headers=self._headers)
+    self._check_fatal_error(r)
     return r.json()
 
   def get_issues(self):

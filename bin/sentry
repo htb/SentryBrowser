@@ -102,8 +102,6 @@ def main():
   if cmd == 'help':
     usage(rich=True)
 
-
-  # TODO: Fail if missing critical option
   if not organization : print 'Organization not specified.'; exit(-1)
   if not project      : print 'Project not specified.'; exit(-1)
   if not auth_token   : print 'Auth token not specified.'; exit(-1)
@@ -172,4 +170,6 @@ def main():
     usage("unknown command '%s'" % cmd)
 
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+  main()
+  sys.exit(0)  # All ok
